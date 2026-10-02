@@ -1,0 +1,39 @@
+name: Generar APK Smart House
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Descomprimir proyecto
+        run: |
+          mkdir proyecto
+          unzip -o SmartHouse_Corregido_HC05.zip -d proyecto
+
+      - name: Buscar proyecto Android
+        run: |
+          echo "Contenido:"
+          find proyecto -maxdepth 4 -type f | head -100
+
+      - name: Dar permisos al Gradle
+        run: |
+          chmod +x $(find proyecto -name gradlew | head -1)
+
+      - name: Compilar APK
+        run: |
+          GRADLEW=$(find proyecto -name gradlew | head -1)
+          ROOT=$(dirname "$GRADLEW")
+          cd "$ROOT"
+          "$GRADLEW" assembleDebug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartHouse-APK
+          path: "**/build/outputs/apk/**/*.apk"
