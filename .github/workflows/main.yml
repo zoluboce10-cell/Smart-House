@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  compilar:
+  compilador:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,24 +16,30 @@ jobs:
           mkdir proyecto
           unzip -o SmartHouse_Corregido_HC05.zip -d proyecto
 
-      - name: Buscar proyecto Android
-        run: |
-          echo "Contenido:"
-          find proyecto -maxdepth 4 -type f | head -100
+      - name: Instalar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-      - name: Dar permisos al Gradle
+      - name: Instalar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.6'
+
+      - name: Preparar proyecto Android
         run: |
-          chmod +x $(find proyecto -name gradlew | head -1)
+          cd proyecto
+          gradle wrapper --gradle-version 8.6
 
       - name: Compilar APK
         run: |
-          GRADLEW=$(find proyecto -name gradlew | head -1)
-          ROOT=$(dirname "$GRADLEW")
-          cd "$ROOT"
-          "$GRADLEW" assembleDebug
+          cd proyecto
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
         with:
           name: SmartHouse-APK
-          path: "**/build/outputs/apk/**/*.apk"
+          path: proyecto/app/build/outputs/apk/debug/app-debug.apk
